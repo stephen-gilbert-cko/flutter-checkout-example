@@ -1,6 +1,6 @@
-# checkout_example
+# Flutter Checkout Example
 
-A new Flutter application.
+A simple Flutter application, containing a payment form to collect card details and generate a Checkout.com token.
 
 ## Getting Started
 
