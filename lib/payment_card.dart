@@ -22,7 +22,6 @@ class PaymentCard {
 enum CardType {
   Master,
   Visa,
-  Verve,
   Discover,
   AmericanExpress,
   DinersClub,
@@ -140,9 +139,6 @@ class CardUtils {
       case CardType.Visa:
         img = 'visa.png';
         break;
-      case CardType.Verve:
-        img = 'verve.png';
-        break;
       case CardType.AmericanExpress:
         img = 'american_express.png';
         break;
@@ -223,9 +219,6 @@ class CardUtils {
       cardType = CardType.Master;
     } else if (input.startsWith(new RegExp(r'[4]'))) {
       cardType = CardType.Visa;
-    } else if (input
-        .startsWith(new RegExp(r'((506(0|1))|(507(8|9))|(6500))'))) {
-      cardType = CardType.Verve;
     } else if (input.startsWith(new RegExp(r'((34)|(37))'))) {
       cardType = CardType.AmericanExpress;
     } else if (input.startsWith(new RegExp(r'((6[45])|(6011))'))) {

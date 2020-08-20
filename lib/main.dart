@@ -7,9 +7,9 @@ import 'package:checkout_example/input_formatters.dart';
 import 'package:checkout_example/payment_card.dart';
 import 'package:checkout_example/my_strings.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
 
 import 'token_model.dart';
-import 'package:http/http.dart' as http;
 
 void main() => runApp(new MyApp());
 
@@ -58,8 +58,10 @@ Future<TokenModel> createToken(String cardNumber, String cardExpiryMonth,
 
   if (response.statusCode == 201) {
     final String responseString = response.body;
+
     print('Success response code: ${response.statusCode}');
     print('Token: ${tokenModelFromJson(responseString).token}');
+
     return tokenModelFromJson(responseString);
   } else {
     print('Error response code ${response.statusCode}');
@@ -252,6 +254,10 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _token = token;
       });
+
+      // Reset payment form
+      _formKey.currentState.reset();
+      numberController.text = "";
     }
   }
 
