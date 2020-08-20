@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,9 @@ import 'package:checkout_example/input_formatters.dart';
 import 'package:checkout_example/payment_card.dart';
 import 'package:checkout_example/my_strings.dart';
 import 'package:flutter/cupertino.dart';
+
+import 'token_model.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(new MyApp());
 
@@ -17,6 +21,7 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primarySwatch: Colors.indigo,
       ),
+      debugShowCheckedModeBanner: false,
       home: new MyHomePage(title: Strings.appName),
     );
   }
@@ -30,7 +35,41 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => new _MyHomePageState();
 }
 
+Future<TokenModel> createToken(String cardNumber, String cardExpiryMonth,
+    String cardExpiryYear, String cardCvv) async {
+  final String apiUrl = "https://api.sandbox.checkout.com/tokens";
+  final String publicKey = "pk_test_7d8d24fc-ffdb-4efc-b945-a19847ce319a";
+
+  var body = {
+    "type": "card",
+    "number": cardNumber,
+    "expiry_month": cardExpiryMonth,
+    "expiry_year": cardExpiryYear,
+    "cvv": cardCvv
+  };
+  var jsonBody = jsonEncode(body);
+
+  final response = await http.post(apiUrl,
+      headers: {
+        HttpHeaders.authorizationHeader: publicKey,
+        HttpHeaders.contentTypeHeader: "application/json"
+      },
+      body: jsonBody);
+
+  if (response.statusCode == 201) {
+    final String responseString = response.body;
+    print('Success response code: ${response.statusCode}');
+    print('Token: ${tokenModelFromJson(responseString).token}');
+    return tokenModelFromJson(responseString);
+  } else {
+    print('Error response code ${response.statusCode}');
+    return null;
+  }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
+  TokenModel _token;
+
   var _scaffoldKey = new GlobalKey<ScaffoldState>();
   var _formKey = new GlobalKey<FormState>();
   var numberController = new TextEditingController();
@@ -78,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                     keyboardType: TextInputType.text,
                     validator: (String value) =>
-                    value.isEmpty ? Strings.fieldReq : null,
+                        value.isEmpty ? Strings.fieldReq : null,
                   ),
                   new SizedBox(
                     height: 30.0,
@@ -164,7 +203,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   new Container(
                     alignment: Alignment.center,
                     child: _getPayButton(),
-                  )
+                  ),
+                  SizedBox(
+                    height: 32,
+                  ),
+                  _token == null ? Container() : Text("Token: ${_token.token}"),
                 ],
               )),
         ));
@@ -186,7 +229,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _validateInputs() {
+  void _validateInputs() async {
     final FormState form = _formKey.currentState;
     if (!form.validate()) {
       setState(() {
@@ -195,8 +238,20 @@ class _MyHomePageState extends State<MyHomePage> {
       _showInSnackBar('Please fix the errors in red before submitting.');
     } else {
       form.save();
-      // Encrypt and send send payment details to payment gateway
-      _showInSnackBar('Payment card is valid');
+      _showInSnackBar('Token created successfully!');
+
+      // Exchange card details for Checkout.com token
+      final String cardNumber = _paymentCard.number.toString();
+      final String cardExpiryMonth = _paymentCard.month.toString();
+      final String cardExpiryYear = _paymentCard.year.toString();
+      final String cardCvv = _paymentCard.cvv.toString();
+
+      final TokenModel token = await createToken(
+          cardNumber, cardExpiryMonth, cardExpiryYear, cardCvv);
+
+      setState(() {
+        _token = token;
+      });
     }
   }
 
