@@ -11,6 +11,8 @@ import 'package:http/http.dart' as http;
 
 import 'token_model.dart';
 
+import 'package:universal_platform/universal_platform.dart';
+
 void main() => runApp(new MyApp());
 
 class MyApp extends StatelessWidget {
@@ -262,7 +264,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _getPayButton() {
-    if (Platform.isIOS) {
+    if (UniversalPlatform.isIOS) {
       return new CupertinoButton(
         onPressed: _validateInputs,
         color: CupertinoColors.activeBlue,
